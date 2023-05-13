@@ -1,0 +1,69 @@
+## Make sure consul is still running, if not open a separate terminal
+## Go into m4\consul and fire it back up by running 
+consul agent -bootstrap -config-file="config/consul-config.hcl" -bind="127.0.0.1"
+
+## Go back to first terminal window
+## Now let's use Sally Sue's token for Consul
+## You can go into the ACL section of the Consul UI and grab it
+
+# Linux and MacOS
+export CONSUL_HTTP_TOKEN=218d1029-f165-ca12-1534-7190916ab557
+
+# Now let's go into the applications directory
+cd applications
+
+### Try to run terraform init with a bad command switch
+terraform init -backend-config="path=applications/state/globo-primary"
+
+### Try to run terraform validate 
+terraform validate
+terraform fmt
+
+### Fix issues and run again
+terraform validate
+
+### Now try and run terraform plan
+terraform plan -out dev.tfplan
+
+### Now try and run terraform apply
+terraform apply "dev.tfplan"
+
+### Enable Info logging
+# Mac or Linux
+export TF_LOG=INFO
+
+### Fix issues and run again
+terraform plan -out dev.tfplan
+terraform apply "dev.tfplan"
+
+### Whelp looks like the instances aren't getting the message
+
+### Taint asg and try to destroy
+terraform state list
+terraform taint aws_autoscaling_group.webapp_asg
+terraform taint aws_autoscaling_policy.scale_down
+terraform taint aws_autoscaling_policy.scale_up
+terraform taint aws_cloudwatch_metric_alarm.scale_down_alarm
+terraform taint aws_cloudwatch_metric_alarm.scale_up_alarm
+
+### Disable Info logging
+export TF_LOG=""
+
+terraform plan -out dev.tfplan
+terraform apply "dev.tfplan"
+
+### Demo panic and dump
+
+# Go into panic\test
+cd ../panic/test
+
+# Initialize terraform with -from-module
+terraform init -from-module="../toplevel"
+
+# Same backend for all workspaces
+terraform init -backend-config="path=applications/state/globo-primary"
+
+# Create the workspace the create and apply the configuration
+terraform workspace new development
+terraform plan -out dev.tfplan
+terraform apply "dev.tfplan"
