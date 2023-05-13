@@ -1,0 +1,35 @@
+# Create valid tfvars file
+cp terraform.tfvars.example terraform.tfvars
+
+# Configure an AWS profile with proper credentials
+aws configure --profile deep-dive
+
+# Linux or MacOS
+export AWS_PROFILE=deep-dive
+
+# Deploy the current environment
+terraform init
+terraform validate
+terraform plan -out m3.tfplan
+terraform apply "m3.tfplan"
+
+# Now Jimmy ruins things (Dammmit Jim!)
+# Linux and MacOS: Run the junior_admin.sh script
+chmod u+x junior_admin.sh
+./junior_admin.sh
+
+# Update your terraform.tfvars file to comment out the current 
+# private_subnets, public_subnets, and subnet_count values and
+# uncomment the updated values
+
+# Run the import commands in ImportCommands.txt
+terraform import --var-file="terraform.tfvars" "module.vpc.aws_route_table.private[2]" rtb-03f48b40531aeb8c8
+terraform import --var-file="terraform.tfvars" "module.vpc.aws_route_table_association.private[2]" subnet-05ff5d07bba3dc349/rtb-03f48b40531aeb8c8
+terraform import --var-file="terraform.tfvars" "module.vpc.aws_subnet.private[2]" subnet-05ff5d07bba3dc349
+terraform import --var-file="terraform.tfvars" "module.vpc.aws_route_table_association.public[2]" subnet-0ba57854f05f10872/rtb-02c4d3dcaaec477e5
+terraform import --var-file="terraform.tfvars" "module.vpc.aws_subnet.public[2]" subnet-0ba57854f05f10872
+
+# There should be 3 changes where tags are added
+terraform plan -out m3.tfplan
+terraform apply "m3.tfplan"
+# terraform destroy
